@@ -20,9 +20,9 @@ So, I decided to create a plugin to fill that specific niche.
 - Simple map format (`.vttmap`): Maps are saved in human-readable JSON
 - System-agnostic game board: The user brings the rules
 - Bring your own assets: Just drag-and-drop them into a scene
-	- Support for 4 assets: backgrounds, prefabs, objects, and tokens
+	- Support for 4 asset types: backgrounds, prefabs, objects, and tokens
 	- Note that prefabs are intended for more complex assets (like buildings with roofs) -- features to use these capabilities will be introduced later
-	- No arbitrary limit on map size
+- No arbitrary limit on map size
 - Lightweight but "typical" VTT experience featuring:
 	- Configurable grid size
 	- Easily manage asset position, rotation, and resizing
@@ -35,12 +35,12 @@ So, I decided to create a plugin to fill that specific niche.
 
 ## Possible Future Features
 
-- Hex grids
+- Hex grids:
 	- Hex snap
 	- Hex movement
 	- Rotation per hex facing
 	- Hex resize (tricky!)
-- Drawing layer (pen, primitive shapes, colors)
+- Drawing layer (pen drawings, primitive shapes, text, colors)
 - Integration between assets and Obsidian notes
 	- Examples: Click a character token, see it's sheet; click a monster, see its description
 	- Requires: New asset type (not a prefab, more than a token...)
@@ -51,8 +51,11 @@ So, I decided to create a plugin to fill that specific niche.
 	- Caves / caverns
 	- Urban types
 	- More
-- New asset type: Tiles
-	- Grid painting?
+- New asset types:
+	- Tiles
+		- Grid painting?
+    - Effects
+    	- Magic, fire, weather...
 - Prefab levels (removeable roofs, removeable tree tops, etc)
 - Teleporter
 	- Exampke: Place different floors of a tower on the same map; jump tokens from level to level at a staircase, etc.
