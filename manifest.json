@@ -1,0 +1,11 @@
+{
+	"id": "obsidian-vtt",
+	"name": "Obsidian VTT",
+	"version": "0.1.0",
+	"minAppVersion": "0.15.0",
+	"description": "Implementation of a simple a simple Virtual Tabletop (VTT) within Obsidian.",
+	"author": "Denver Andy",
+	"authorUrl": "denver-andy@protonmail.com",
+	"fundingUrl": "denver-andy@protonmail.com",
+	"isDesktopOnly": false
+}

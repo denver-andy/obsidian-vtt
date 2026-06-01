@@ -1,0 +1,732 @@
+.vtt-map-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: 0;
+}
+
+.vtt-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    outline: none;
+}
+
+.vtt-toolbar-group {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.vtt-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px;
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(120, 130, 160, 0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+}
+
+.vtt-map-settings {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(120, 130, 160, 0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    min-width: 180px;
+}
+
+.vtt-map-settings.is-open {
+    display: flex;
+}
+
+.vtt-settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.vtt-settings-label {
+    font-size: 0.85em;
+    color: rgba(180, 190, 210, 0.8);
+    white-space: nowrap;
+}
+
+.vtt-color-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.vtt-color-controls input[type="color"] {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    background: none;
+}
+
+.vtt-hex-input {
+    width: 60px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    color: rgba(220, 230, 255, 0.9);
+    padding: 2px 6px;
+    font-size: 0.85em;
+    font-family: monospace;
+    text-align: right;
+}
+
+.vtt-settings-row input[type="number"] {
+    width: 60px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    color: rgba(220, 230, 255, 0.9);
+    padding: 2px 6px;
+    font-size: 0.85em;
+    text-align: right;
+}
+
+.vtt-select {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    color: rgba(220, 230, 255, 0.9);
+    padding: 2px 4px;
+    font-size: 0.82em;
+    cursor: pointer;
+    max-width: 108px;
+}
+
+.vtt-select option {
+    background: rgba(20, 20, 35, 1);
+    color: rgba(220, 230, 255, 0.9);
+}
+
+.vtt-toggle {
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 9px;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+    box-sizing: border-box;
+}
+
+.vtt-toggle:focus-visible {
+    outline: 2px solid rgba(100, 140, 210, 0.7);
+    outline-offset: 2px;
+}
+
+.vtt-toggle.is-checked {
+    background: rgba(100, 140, 210, 0.5);
+    border-color: rgba(100, 140, 210, 0.5);
+}
+
+.vtt-toggle-thumb {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: rgba(180, 190, 210, 0.7);
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.15s, background 0.15s;
+    pointer-events: none;
+}
+
+.vtt-toggle.is-checked .vtt-toggle-thumb {
+    transform: translateX(14px);
+    background: rgba(220, 230, 255, 1);
+}
+
+.vtt-toolbar-btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgba(180, 190, 210, 0.75);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.vtt-toolbar-btn:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+.vtt-toolbar-btn:active {
+    background: rgba(120, 130, 160, 0.45);
+}
+
+.vtt-toolbar-btn.is-active {
+    background: rgba(96, 165, 250, 0.18);
+    color: rgba(96, 165, 250, 1);
+}
+
+.vtt-toolbar-btn.is-active:hover {
+    background: rgba(96, 165, 250, 0.3);
+    color: rgba(96, 165, 250, 1);
+}
+
+/* Content browser */
+
+.vtt-content-browser {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(120, 130, 160, 0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+}
+
+.vtt-browser-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    border-bottom: 1px solid rgba(120, 130, 160, 0.2);
+}
+
+.vtt-browser-tab {
+    flex: 1;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgba(180, 190, 210, 0.6);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.vtt-browser-tab:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+.vtt-browser-tab.is-active {
+    background: rgba(120, 130, 160, 0.3);
+    color: rgba(220, 230, 255, 1);
+}
+
+.vtt-browser-search {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    border-bottom: 1px solid rgba(120, 130, 160, 0.2);
+}
+
+.vtt-browser-search-input {
+    flex: 1;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    background: rgba(20, 25, 40, 0.5);
+    color: rgba(220, 230, 255, 0.9);
+    font-size: 0.82em;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.vtt-browser-search-input::placeholder {
+    color: rgba(120, 130, 160, 0.6);
+}
+
+.vtt-browser-search-input:focus {
+    border-color: rgba(120, 130, 160, 0.6);
+}
+
+.vtt-browser-search-clear {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: rgba(180, 190, 210, 0.5);
+    font-size: 1em;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.vtt-browser-search-clear:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+.vtt-browser-content {
+    min-height: 80px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.vtt-browser-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+    color: rgba(120, 130, 160, 0.6);
+    font-size: 0.85em;
+}
+
+.vtt-browser-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 2px 4px;
+    transition: background 0.12s;
+}
+
+.vtt-browser-item:hover {
+    background: rgba(120, 130, 160, 0.2);
+}
+
+.vtt-browser-item-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+    margin-right: 8px;
+    cursor: context-menu;
+}
+
+.vtt-browser-item-name {
+    font-size: 0.82em;
+    color: rgba(200, 210, 230, 0.85);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Scene hierarchy */
+
+.vtt-hierarchy {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    z-index: 10;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(120, 130, 160, 0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+}
+
+.vtt-hierarchy-header {
+    padding: 6px 10px;
+    font-size: 0.78em;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(140, 155, 185, 0.8);
+    border-bottom: 1px solid rgba(120, 130, 160, 0.2);
+}
+
+.vtt-hierarchy-body {
+    max-height: 390px;
+    overflow-y: auto;
+}
+
+.vtt-hierarchy-section-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+}
+
+.vtt-hierarchy-section-header:hover {
+    background: rgba(120, 130, 160, 0.15);
+}
+
+.vtt-hierarchy-chevron {
+    display: flex;
+    align-items: center;
+    color: rgba(140, 155, 185, 0.6);
+    flex-shrink: 0;
+    transition: transform 0.15s;
+}
+
+.vtt-hierarchy-chevron.is-collapsed {
+    transform: rotate(-90deg);
+}
+
+.vtt-hierarchy-layer-icon {
+    display: flex;
+    align-items: center;
+    color: rgba(160, 175, 210, 0.7);
+    flex-shrink: 0;
+}
+
+.vtt-hierarchy-layer-label {
+    flex: 1;
+    font-size: 0.82em;
+    color: rgba(200, 210, 230, 0.9);
+}
+
+.vtt-hierarchy-layer-count {
+    font-size: 0.75em;
+    color: rgba(120, 130, 160, 0.7);
+    background: rgba(120, 130, 160, 0.15);
+    border-radius: 8px;
+    padding: 0 5px;
+    min-width: 16px;
+    text-align: center;
+}
+
+.vtt-hierarchy-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px 3px 22px;
+    transition: background 0.12s;
+}
+
+.vtt-hierarchy-item:hover {
+    background: rgba(120, 130, 160, 0.15);
+}
+
+.vtt-hierarchy-item.is-selected {
+    background: rgba(100, 140, 210, 0.2);
+}
+
+.vtt-hierarchy-item.is-selected:hover {
+    background: rgba(100, 140, 210, 0.3);
+}
+
+.vtt-hierarchy-item-icon {
+    display: flex;
+    align-items: center;
+    color: rgba(140, 155, 185, 0.5);
+    flex-shrink: 0;
+}
+
+.vtt-hierarchy-item-name {
+    flex: 1;
+    font-size: 0.80em;
+    color: rgba(180, 195, 220, 0.8);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vtt-hierarchy-rename-input {
+    flex: 1;
+    height: 20px;
+    padding: 0 4px;
+    border: 1px solid rgba(100, 140, 210, 0.7);
+    border-radius: 3px;
+    background: rgba(15, 20, 45, 0.95);
+    color: rgba(220, 230, 255, 0.95);
+    font-size: 0.80em;
+    outline: none;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.vtt-hierarchy-item.is-hidden .vtt-hierarchy-item-name {
+    opacity: 0.4;
+}
+
+.vtt-hierarchy-item-actions {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.vtt-hierarchy-item-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+    color: rgba(140, 155, 185, 0.45);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.vtt-hierarchy-item-btn:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+.vtt-hierarchy-item-btn--danger:hover {
+    background: rgba(180, 60, 60, 0.3);
+    color: rgba(255, 120, 120, 1);
+}
+
+.vtt-modal-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+/* Asset action menu (appears above/below selected asset on canvas) */
+
+.vtt-asset-menu {
+    position: absolute;
+    z-index: 20;
+    display: flex;
+    flex-direction: row;
+    gap: 3px;
+    padding: 4px;
+    background: rgba(20, 20, 35, 0.88);
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    pointer-events: auto;
+}
+
+.vtt-asset-menu-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: rgba(180, 190, 210, 0.75);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.vtt-asset-menu-btn:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+.vtt-asset-menu-btn:active {
+    background: rgba(120, 130, 160, 0.45);
+}
+
+.vtt-asset-menu-btn.is-active {
+    background: rgba(249, 115, 22, 0.18);
+    color: #f97316;
+}
+
+.vtt-asset-menu-btn.is-active:hover {
+    background: rgba(249, 115, 22, 0.3);
+    color: #f97316;
+}
+
+.vtt-asset-menu-btn--danger:hover {
+    background: rgba(180, 60, 60, 0.3);
+    color: rgba(255, 120, 120, 1);
+}
+
+/* Dice tray */
+
+.vtt-dice-tray {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    z-index: 10;
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(20, 20, 35, 0.8);
+    border: 1px solid rgba(120, 130, 160, 0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+}
+
+.vtt-dice-tray-header {
+    padding: 6px 10px;
+    font-size: 0.78em;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(140, 155, 185, 0.8);
+    border-bottom: 1px solid rgba(120, 130, 160, 0.2);
+}
+
+.vtt-dice-tray-input-row {
+    display: flex;
+    gap: 6px;
+    padding: 8px 8px 6px;
+}
+
+.vtt-dice-tray-formula-input {
+    flex: 1;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    background: rgba(20, 25, 40, 0.5);
+    color: rgba(220, 230, 255, 0.9);
+    font-size: 0.85em;
+    font-family: monospace;
+    outline: none;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.vtt-dice-tray-formula-input::placeholder {
+    color: rgba(120, 130, 160, 0.5);
+}
+
+.vtt-dice-tray-formula-input:focus {
+    border-color: rgba(120, 130, 160, 0.6);
+}
+
+.vtt-dice-tray-roll-btn {
+    flex-shrink: 0;
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    background: rgba(96, 165, 250, 0.15);
+    color: rgba(96, 165, 250, 0.9);
+    font-size: 0.82em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.vtt-dice-tray-roll-btn:hover {
+    background: rgba(96, 165, 250, 0.28);
+    color: rgba(160, 210, 255, 1);
+    border-color: rgba(96, 165, 250, 0.5);
+}
+
+.vtt-dice-tray-roll-btn:active {
+    background: rgba(96, 165, 250, 0.4);
+}
+
+.vtt-dice-tray-dice-row {
+    display: flex;
+    gap: 4px;
+    padding: 0 8px 8px;
+}
+
+.vtt-dice-tray-die-btn {
+    flex: 1;
+    height: 26px;
+    padding: 0;
+    border: 1px solid rgba(120, 130, 160, 0.25);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(180, 190, 210, 0.8);
+    font-size: 0.72em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    white-space: nowrap;
+}
+
+.vtt-dice-tray-die-btn:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+    border-color: rgba(120, 130, 160, 0.5);
+}
+
+.vtt-dice-tray-die-btn:active {
+    background: rgba(120, 130, 160, 0.4);
+}
+
+.vtt-dice-tray-result {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 8px 12px;
+    border-top: 1px solid rgba(120, 130, 160, 0.2);
+    gap: 4px;
+}
+
+.vtt-dice-tray-result.has-result {
+    display: flex;
+}
+
+.vtt-dice-tray-total {
+    font-size: 2.8em;
+    font-weight: 700;
+    color: rgba(220, 230, 255, 1);
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.vtt-dice-tray-breakdown {
+    font-size: 0.80em;
+    color: rgba(140, 155, 185, 0.85);
+    font-family: monospace;
+    text-align: center;
+    word-break: break-all;
+}
+
+.vtt-image-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.vtt-image-modal-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+    cursor: default;
+}
