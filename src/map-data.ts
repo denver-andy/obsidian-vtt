@@ -31,6 +31,7 @@ export interface MapData {
 	};
 	layers: {
 		backgrounds: MapInstance[];
+		tiles: MapInstance[];
 		prefabs: MapInstance[];
 		objects: MapInstance[];
 		tokens: MapInstance[];
@@ -55,6 +56,7 @@ export const DEFAULT_MAP_DATA: MapData = {
 	},
 	layers: {
 		backgrounds: [],
+		tiles: [],
 		prefabs: [],
 		objects: [],
 		tokens: [],
@@ -93,6 +95,7 @@ export function parseMapData(content: string, defaults?: ParseDefaults): MapData
 			},
 			layers: {
 				backgrounds: asInstances(l?.['backgrounds']),
+				tiles:       asInstances(l?.['tiles']),
 				prefabs:     asInstances(l?.['prefabs']),
 				objects:     asInstances(l?.['objects']),
 				tokens:      asInstances(l?.['tokens']),

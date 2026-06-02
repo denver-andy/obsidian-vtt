@@ -23,6 +23,7 @@ export interface AssetDropData {
 
 export interface MapLayers {
 	backgrounds: MapInstance[];
+	tiles: MapInstance[];
 	prefabs: MapInstance[];
 	objects: MapInstance[];
 	tokens: MapInstance[];
@@ -78,7 +79,7 @@ export class MapRenderer {
 	private readonly getResourcePath: (path: string) => string;
 	private readonly onAssetDrop?: (data: AssetDropData) => void;
 
-	private layers: MapLayers = { backgrounds: [], prefabs: [], objects: [], tokens: [] };
+	private layers: MapLayers = { backgrounds: [], tiles: [], prefabs: [], objects: [], tokens: [] };
 	private selectedIds = new Set<string>();
 	private readonly imageCache = new Map<string, HTMLImageElement | null>();
 
@@ -357,7 +358,7 @@ export class MapRenderer {
 			const [instanceId] = this.selectedIds;
 			let inst: MapInstance | undefined;
 			let layerId: keyof MapLayers | undefined;
-			for (const lid of ['tokens', 'objects', 'prefabs', 'backgrounds'] as const) {
+			for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 				const found = this.layers[lid].find(i => i.id === instanceId);
 				if (found) { inst = found; layerId = lid; break; }
 			}
@@ -377,7 +378,7 @@ export class MapRenderer {
 		// Move and rotate support multi-select.
 		// Find the topmost selected, unlocked, non-hidden instance under the cursor.
 		let clickedInst: MapInstance | undefined;
-		for (const lid of ['tokens', 'objects', 'prefabs', 'backgrounds'] as const) {
+		for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 			const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
 			for (let i = this.layers[lid].length - 1; i >= 0; i--) {
 				const inst = this.layers[lid][i]!;
@@ -395,7 +396,7 @@ export class MapRenderer {
 
 		// Collect every selected, unlocked, non-hidden instance for the drag.
 		this.dragInstances = [];
-		for (const lid of ['tokens', 'objects', 'prefabs', 'backgrounds'] as const) {
+		for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 			const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
 			for (const inst of this.layers[lid]) {
 				if (this.selectedIds.has(inst.id) && !inst.hidden && !(inst.locked ?? defaultLocked)) {
@@ -503,7 +504,7 @@ export class MapRenderer {
 			// Resize is single-selection only.
 			if (this.selectedIds.size !== 1) { this.canvas.style.cursor = ''; return; }
 			const [instanceId] = this.selectedIds;
-			for (const lid of ['tokens', 'objects', 'prefabs', 'backgrounds'] as const) {
+			for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 				const inst = this.layers[lid].find(i => i.id === instanceId);
 				if (!inst || inst.hidden) continue;
 				const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
@@ -516,7 +517,7 @@ export class MapRenderer {
 
 		// Move/rotate: show cursor when hovering any selected, unlocked, non-hidden instance.
 		const hoverCursor = this.activeMode === 'move' ? 'grab' : 'ew-resize';
-		for (const lid of ['tokens', 'objects', 'prefabs', 'backgrounds'] as const) {
+		for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 			const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
 			for (let i = this.layers[lid].length - 1; i >= 0; i--) {
 				const inst = this.layers[lid][i]!;
@@ -550,7 +551,7 @@ export class MapRenderer {
 	private hitTest(cssX: number, cssY: number): MapInstance | null {
 		const worldX = (cssX - this.panX) / this.zoom;
 		const worldY = (cssY - this.panY) / this.zoom;
-		const layerOrder: (keyof MapLayers)[] = ['tokens', 'objects', 'prefabs', 'backgrounds'];
+		const layerOrder: (keyof MapLayers)[] = ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'];
 		for (const layerId of layerOrder) {
 			const layer = this.layers[layerId];
 			const defaultLocked = layerId === 'backgrounds' || layerId === 'prefabs';
@@ -621,7 +622,7 @@ export class MapRenderer {
 		if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
 			if (this.selectedIds.size === 1) {
 				const [instanceId] = this.selectedIds;
-				for (const lid of ['tokens', 'objects', 'prefabs', 'backgrounds'] as const) {
+				for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 					if (this.layers[lid].some(i => i.id === instanceId)) {
 						e.preventDefault();
 						this.onCopySelection?.(instanceId!, lid);
@@ -697,8 +698,9 @@ export class MapRenderer {
 		ctx.fillStyle = '#1a1a2e';
 		ctx.fillRect(0, 0, W, H);
 
-		// Backgrounds and prefabs (structures) sit below the grid.
+		// Backgrounds, tiles, and prefabs (structures) sit below the grid.
 		this.drawLayer(this.layers.backgrounds);
+		this.drawLayer(this.layers.tiles);
 		this.drawLayer(this.layers.prefabs);
 
 		const cellSize = this.cellSize * this.zoom;
@@ -729,7 +731,7 @@ export class MapRenderer {
 		// Selection boxes drawn last so they always appear on top.
 		if (this.selectedIds.size > 0) {
 			const showHandle = this.activeMode === 'resize' && this.selectedIds.size === 1;
-			for (const layerId of ['backgrounds', 'prefabs', 'objects', 'tokens'] as const) {
+			for (const layerId of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
 				for (const inst of this.layers[layerId]) {
 					if (!inst.hidden && this.selectedIds.has(inst.id)) {
 						this.drawSelectionBox(inst);
@@ -754,7 +756,7 @@ export class MapRenderer {
 		let firstLayerId: keyof MapLayers | null = null;
 		let count = 0;
 
-		for (const layerId of ['backgrounds', 'prefabs', 'objects', 'tokens'] as const) {
+		for (const layerId of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
 			for (const inst of this.layers[layerId]) {
 				if (!this.selectedIds.has(inst.id) || inst.hidden) continue;
 				if (firstId === null) { firstId = inst.id; firstLayerId = layerId; }

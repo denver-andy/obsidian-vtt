@@ -1,9 +1,10 @@
 import { DataAdapter, setIcon } from 'obsidian';
 
-type ContentCategory = 'backgrounds' | 'prefabs' | 'objects' | 'tokens';
+type ContentCategory = 'backgrounds' | 'tiles' | 'prefabs' | 'objects' | 'tokens';
 
 export interface CustomAssetFolders {
 	backgrounds: string;
+	tiles: string;
 	prefabs: string;
 	objects: string;
 	tokens: string;
@@ -17,6 +18,7 @@ interface CategoryConfig {
 
 const CATEGORIES: CategoryConfig[] = [
 	{ id: 'backgrounds', label: 'Backgrounds', icon: 'image' },
+	{ id: 'tiles',       label: 'Tiles',       icon: 'mirror-rectangular' },
 	{ id: 'prefabs',     label: 'Prefabs',     icon: 'layout-template' },
 	{ id: 'objects',     label: 'Objects',     icon: 'box' },
 	{ id: 'tokens',      label: 'Tokens',      icon: 'user' },

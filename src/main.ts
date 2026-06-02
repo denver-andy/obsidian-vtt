@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { addIcon, Plugin, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, VTTPluginSettings, VTTSettingTab } from './settings';
 import { VTT_VIEW_TYPE, VttView } from './vtt-view';
 import { DEFAULT_MAP_DATA } from './map-data';
@@ -7,6 +7,18 @@ export default class VTTPlugin extends Plugin {
 	settings!: VTTPluginSettings;
 
 	async onload() {
+		// Obsidian wraps addIcon content in viewBox="0 0 100 100"; Lucide paths are
+		// 24x24, so scale(4.167) maps them into the 100x100 space. Stroke attributes
+		// must be explicit because the custom-icon SVG wrapper has no defaults.
+		addIcon('mirror-rectangular',
+			'<g transform="scale(4.167)" fill="none" stroke="currentColor"' +
+			' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+			'<rect x="4" y="2" width="16" height="20" rx="2"/>' +
+			'<path d="M11 6 8 9"/>' +
+			'<path d="m16 7-8 8"/>' +
+			'</g>',
+		);
+
 		await this.loadSettings();
 
 		this.registerView(VTT_VIEW_TYPE, (leaf) => new VttView(leaf, this));

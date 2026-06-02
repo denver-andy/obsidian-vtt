@@ -92,7 +92,7 @@ export class VttView extends FileView {
 				let isLocked: boolean;
 				if (bounds.isMulti) {
 					isLocked = [...this.currentSelection].every(id => {
-						for (const lid of ['backgrounds', 'prefabs', 'objects', 'tokens'] as const) {
+						for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
 							const inst = this.mapData.layers[lid].find(i => i.id === id);
 							if (inst) return inst.locked ?? (lid === 'backgrounds' || lid === 'prefabs');
 						}
@@ -202,7 +202,7 @@ export class VttView extends FileView {
 		this.actionMenu = new AssetActionMenu(this.contentEl, {
 			onLockToggle: () => {
 				for (const id of this.currentSelection) {
-					for (const lid of ['backgrounds', 'prefabs', 'objects', 'tokens'] as const) {
+					for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
 						if (this.mapData.layers[lid].some(i => i.id === id)) {
 							this.toggleLocked(lid, id);
 							break;
@@ -219,7 +219,7 @@ export class VttView extends FileView {
 				const label = ids.length > 1 ? `${ids.length} assets` : 'this asset';
 				new DeleteConfirmModal(this.app, label, () => {
 					for (const id of ids) {
-						for (const lid of ['backgrounds', 'prefabs', 'objects', 'tokens'] as const) {
+						for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
 							const idx = this.mapData.layers[lid].findIndex(i => i.id === id);
 							if (idx !== -1) { this.mapData.layers[lid].splice(idx, 1); break; }
 						}
@@ -352,6 +352,7 @@ export class VttView extends FileView {
 		const s = this.plugin.settings;
 		return {
 			backgrounds: s.backgroundsFolder,
+			tiles:       s.tilesFolder,
 			prefabs:     s.prefabsFolder,
 			objects:     s.objectsFolder,
 			tokens:      s.tokensFolder,

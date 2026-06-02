@@ -1,7 +1,7 @@
 import { App, Modal, setIcon } from 'obsidian';
 import type { MapLayers } from './map-renderer';
 
-export type LayerId = 'backgrounds' | 'prefabs' | 'objects' | 'tokens';
+export type LayerId = 'backgrounds' | 'tiles' | 'prefabs' | 'objects' | 'tokens';
 
 interface LayerConfig {
 	id: LayerId;
@@ -11,6 +11,7 @@ interface LayerConfig {
 
 const LAYER_CONFIGS: LayerConfig[] = [
 	{ id: 'backgrounds', label: 'Backgrounds', icon: 'image' },
+	{ id: 'tiles',       label: 'Tiles',       icon: 'mirror-rectangular' },
 	{ id: 'prefabs',     label: 'Prefabs',     icon: 'layout-template' },
 	{ id: 'objects',     label: 'Objects',     icon: 'box' },
 	{ id: 'tokens',      label: 'Tokens',      icon: 'user' },

@@ -6,6 +6,7 @@ export interface VTTPluginSettings {
 	cellSize: number;
 	panSpeed: number;
 	backgroundsFolder: string;
+	tilesFolder: string;
 	prefabsFolder: string;
 	objectsFolder: string;
 	tokensFolder: string;
@@ -18,6 +19,7 @@ export const DEFAULT_SETTINGS: VTTPluginSettings = {
 	cellSize: 100,
 	panSpeed: 400,
 	backgroundsFolder: '',
+	tilesFolder: '',
 	prefabsFolder: '',
 	objectsFolder: '',
 	tokensFolder: '',
@@ -26,7 +28,7 @@ export const DEFAULT_SETTINGS: VTTPluginSettings = {
 	defaultMeasureDiagonal: 'exact',
 };
 
-type FolderKey = 'backgroundsFolder' | 'prefabsFolder' | 'objectsFolder' | 'tokensFolder';
+type FolderKey = 'backgroundsFolder' | 'tilesFolder' | 'prefabsFolder' | 'objectsFolder' | 'tokensFolder';
 
 export class VTTSettingTab extends PluginSettingTab {
 	plugin: VTTPlugin;
@@ -44,6 +46,7 @@ export class VTTSettingTab extends PluginSettingTab {
 		containerEl.createEl('p', { text: 'Vault-relative paths to folders containing your own assets. Leave blank to disable.', cls: 'setting-item-description' });
 
 		this.addFolderSetting(containerEl, 'Backgrounds folder', 'backgroundsFolder');
+		this.addFolderSetting(containerEl, 'Tiles folder',       'tilesFolder');
 		this.addFolderSetting(containerEl, 'Prefabs folder',     'prefabsFolder');
 		this.addFolderSetting(containerEl, 'Objects folder',     'objectsFolder');
 		this.addFolderSetting(containerEl, 'Tokens folder',      'tokensFolder');
