@@ -4,7 +4,7 @@ const ZOOM_FACTOR = 1.12;
 const MIN_ZOOM = 0.2;
 const MAX_ZOOM = 1.5;
 
-const PAN_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd']);
+const PAN_KEYS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
 
 // Rotation drag: pixels of horizontal movement per radian, and snap increment.
 const ROTATE_PIXELS_PER_RAD = 120;
@@ -100,9 +100,12 @@ export class MapRenderer {
 	private dragResizeOrigRotation = 0;
 	private dragMoved = false;
 
-	private readonly heldKeys = new Set<string>();
-	private rafId: number | null = null;
-	private lastTime: number | null = null;
+	private panDragActive = false;
+	private panDragLastX = 0;
+	private panDragLastY = 0;
+	private panDragMoved = false;
+
+
 
 	private readonly onSelect?: (instanceId: string | null) => void;
 	private readonly onAfterDraw?: (bounds: ScreenBounds | null) => void;
@@ -120,7 +123,6 @@ export class MapRenderer {
 	private readonly resizeObserver: ResizeObserver;
 	private readonly boundWheel: (e: WheelEvent) => void;
 	private readonly boundKeyDown: (e: KeyboardEvent) => void;
-	private readonly boundKeyUp: (e: KeyboardEvent) => void;
 	private readonly boundDragOver: (e: DragEvent) => void;
 	private readonly boundDrop: (e: DragEvent) => void;
 	private readonly boundClick: (e: MouseEvent) => void;
@@ -155,7 +157,6 @@ export class MapRenderer {
 
 		this.boundWheel    = this.onWheel.bind(this);
 		this.boundKeyDown  = this.onKeyDown.bind(this);
-		this.boundKeyUp    = this.onKeyUp.bind(this);
 		this.boundDragOver = this.onDragOver.bind(this);
 		this.boundDrop     = this.onDrop.bind(this);
 		this.boundClick    = this.onClick.bind(this);
@@ -166,7 +167,6 @@ export class MapRenderer {
 
 		this.canvas.addEventListener('wheel',     this.boundWheel,    { passive: false });
 		this.canvas.addEventListener('keydown',   this.boundKeyDown);
-		this.canvas.addEventListener('keyup',     this.boundKeyUp);
 		this.canvas.addEventListener('dragover',  this.boundDragOver);
 		this.canvas.addEventListener('drop',      this.boundDrop);
 		this.canvas.addEventListener('click',       this.boundClick);
@@ -185,7 +185,6 @@ export class MapRenderer {
 		this.resizeObserver.disconnect();
 		this.canvas.removeEventListener('wheel',     this.boundWheel);
 		this.canvas.removeEventListener('keydown',   this.boundKeyDown);
-		this.canvas.removeEventListener('keyup',     this.boundKeyUp);
 		this.canvas.removeEventListener('dragover',  this.boundDragOver);
 		this.canvas.removeEventListener('drop',      this.boundDrop);
 		this.canvas.removeEventListener('click',       this.boundClick);
@@ -193,7 +192,6 @@ export class MapRenderer {
 		this.canvas.removeEventListener('contextmenu', this.boundContextMenu);
 		window.removeEventListener('mousemove', this.boundMouseMove);
 		window.removeEventListener('mouseup',   this.boundMouseUp);
-		if (this.rafId !== null) cancelAnimationFrame(this.rafId);
 		this.canvas.remove();
 	}
 
@@ -333,6 +331,16 @@ export class MapRenderer {
 	}
 
 	private onMouseDown(e: MouseEvent) {
+		if (e.button === 2) {
+			if (this.measureActive) return; // let contextmenu deactivate the tool
+			this.panDragActive = true;
+			this.panDragLastX = e.clientX;
+			this.panDragLastY = e.clientY;
+			this.panDragMoved = false;
+			this.canvas.style.cursor = 'grabbing';
+			e.preventDefault();
+			return;
+		}
 		if (this.measureActive) return;
 		if (e.button !== 0 || this.selectedIds.size === 0) return;
 		if (this.activeMode !== 'move' && this.activeMode !== 'rotate' && this.activeMode !== 'resize') return;
@@ -413,6 +421,20 @@ export class MapRenderer {
 	}
 
 	private onMouseMove(e: MouseEvent) {
+		if (this.panDragActive) {
+			const dx = e.clientX - this.panDragLastX;
+			const dy = e.clientY - this.panDragLastY;
+			this.panDragLastX = e.clientX;
+			this.panDragLastY = e.clientY;
+			if (dx !== 0 || dy !== 0) {
+				this.panX += dx;
+				this.panY += dy;
+				this.panDragMoved = true;
+				this.draw();
+			}
+			return;
+		}
+
 		if (this.measureActive && this.measureStart !== null) {
 			const rect = this.canvas.getBoundingClientRect();
 			const worldX = (e.clientX - rect.left - this.panX) / this.zoom;
@@ -509,6 +531,11 @@ export class MapRenderer {
 	}
 
 	private onMouseUp(e: MouseEvent) {
+		if (e.button === 2 && this.panDragActive) {
+			this.panDragActive = false;
+			this.canvas.style.cursor = '';
+			return;
+		}
 		if (e.button !== 0 || !this.dragInst) return;
 		if (this.activeMode === 'resize') {
 			this.dragInst.rotation = this.dragResizeOrigRotation;
@@ -551,12 +578,25 @@ export class MapRenderer {
 
 	private onWheel(e: WheelEvent) {
 		e.preventDefault();
-		const factor = e.deltaY < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
+		// Normalise deltaMode so line-mode mice produce ~100 px per click,
+		// matching what pixel-mode devices (trackpads) report.
+		let delta = e.deltaY;
+		if (e.deltaMode === 1) delta *= 30;
+		if (e.deltaMode === 2) delta *= 600;
+		// Proportional zoom: 100 px of scroll = one ZOOM_FACTOR step.
+		// This naturally gives smooth, gentle steps for trackpad (small deltas,
+		// many events) and the same per-notch feel for a mouse wheel.
+		const factor = Math.pow(ZOOM_FACTOR, delta / 100);
 		const rect = this.canvas.getBoundingClientRect();
 		this.applyZoom(factor, e.clientX - rect.left, e.clientY - rect.top);
 	}
 
 	private onContextMenu(e: MouseEvent) {
+		if (this.panDragMoved) {
+			e.preventDefault();
+			this.panDragMoved = false;
+			return;
+		}
 		if (!this.measureActive) return;
 		e.preventDefault();
 		this.deactivateMeasure();
@@ -602,35 +642,14 @@ export class MapRenderer {
 			return;
 		}
 
-		if (!PAN_KEYS.has(e.key)) return;
+		if (!PAN_KEYS.has(e.key) || !(e.ctrlKey || e.metaKey)) return;
 		e.preventDefault();
-		this.heldKeys.add(e.key);
-		if (this.rafId === null) {
-			this.lastTime = null;
-			this.rafId = requestAnimationFrame(ts => this.tick(ts));
-		}
-	}
-
-	private onKeyUp(e: KeyboardEvent) {
-		this.heldKeys.delete(e.key);
-	}
-
-	private tick(ts: number) {
-		if (this.lastTime === null) this.lastTime = ts;
-		const dt = Math.min((ts - this.lastTime) / 1000, 0.1);
-		this.lastTime = ts;
-
-		const step = this.panSpeed * dt;
-		if (this.heldKeys.has('ArrowRight') || this.heldKeys.has('d')) this.panX -= step;
-		if (this.heldKeys.has('ArrowLeft')  || this.heldKeys.has('a')) this.panX += step;
-		if (this.heldKeys.has('ArrowDown')  || this.heldKeys.has('s')) this.panY -= step;
-		if (this.heldKeys.has('ArrowUp')    || this.heldKeys.has('w')) this.panY += step;
-
+		const step = this.cellSize * this.zoom;
+		if (e.key === 'ArrowRight') this.panX -= step;
+		if (e.key === 'ArrowLeft')  this.panX += step;
+		if (e.key === 'ArrowDown')  this.panY -= step;
+		if (e.key === 'ArrowUp')    this.panY += step;
 		this.draw();
-
-		this.rafId = this.heldKeys.size > 0
-			? requestAnimationFrame(ts => this.tick(ts))
-			: null;
 	}
 
 	private onDragOver(e: DragEvent) {
