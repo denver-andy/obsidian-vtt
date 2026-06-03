@@ -1,8 +1,8 @@
 # Obsidian VTT
 
-This project is a plugin for [Obsidian](https://obsidian.md). 
+This project is a plugin for [Obsidian](https://obsidian.md). The purpose of the plugin is to implement a simple Virtual Tabletop (VTT) for tabletop role-playing games (TTRPGs), within Obsidian.
 
-The purpose of this plugin is to implement a simple Virtual Tabletop (VTT) for tabletop role-playing games (TTRPGs), within Obsidian.
+NOTE THAT THIS PROJECT IS IN **ACTIVE DEVELOPMENT** AND NOT YET STABLE.
 
 ## Why this plugin?
 
@@ -18,7 +18,7 @@ So, I decided to create a plugin to fill that specific niche.
 
 - Seamless integration with Obsidian: Install, enable, go!
 - Simple map format (`.vttmap`): Maps are saved in human-readable JSON
-- System-agnostic game board: The user brings the rules
+- System-agnostic game board: Users bring the rules
 - Bring your own assets: Just drag-and-drop them into a scene
 	- Support for 5 asset types: backgrounds, tiles, prefabs, objects, and tokens
 	- Note that prefabs are intended for more complex assets (like buildings with roofs) -- features to use these capabilities will be introduced later
@@ -39,4 +39,4 @@ INSERT SCREENSHOTS
 
 ## Support
 
-I you find the VTT plugin useful or fun and you want to support me, you can donate or buy me a coffee, to keep me motivated!
+If you find the VTT plugin useful or fun and you want to support me, you can donate or buy me a coffee, to keep me motivated!
