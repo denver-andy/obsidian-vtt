@@ -17,6 +17,11 @@ npm run lint         # eslint ./src/
 
 There are no automated tests — testing is manual (see below).
 
+## Explicit Prohibitions
+
+- **NEVER run `git commit` or `git push`** under any circumstances.
+- **ALWAYS wait for explicit user approval** before executing any irreversible terminal commands.
+
 ## Architecture
 
 ```
