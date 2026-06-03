@@ -50,9 +50,11 @@ export class LeftMenu {
 		});
 
 		const settingsPanel = this.buildSettingsPanel(group, options);
-		this.addToolbarBtn(toolbar, 'settings', 'Map settings', () =>
-			settingsPanel.toggleClass('is-open', !settingsPanel.hasClass('is-open'))
-		);
+		const settingsBtn = this.addToolbarBtn(toolbar, 'settings', 'Map settings', () => {
+			const open = !settingsPanel.hasClass('is-open');
+			settingsPanel.toggleClass('is-open', open);
+			settingsBtn.toggleClass('is-active', open);
+		});
 
 		this.el = group;
 	}

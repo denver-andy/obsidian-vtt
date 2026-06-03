@@ -344,6 +344,7 @@ export class SceneHierarchy {
 export class DeleteConfirmModal extends Modal {
 	constructor(app: App, label: string, onConfirm: () => void) {
 		super(app);
+		this.modalEl.addClass('vtt-confirm-modal');
 		this.titleEl.setText('Remove from scene');
 		this.contentEl.createEl('p', { text: `Remove ${label} from the scene?` });
 

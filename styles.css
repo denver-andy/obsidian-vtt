@@ -4,6 +4,26 @@
     height: 100%;
     overflow: hidden;
     padding: 0;
+    color-scheme: dark;
+    background: #0e0e1a;
+
+    /* Override Obsidian theme variables so every child element — current and
+       future — uses dark values regardless of the active Obsidian theme. */
+    --background-primary:             #0e0e1a;
+    --background-secondary:           #14141e;
+    --background-tertiary:            #14141e;
+    --background-modifier-form-field: rgba(255, 255, 255, 0.06);
+    --background-modifier-border:     rgba(120, 130, 160, 0.25);
+    --background-modifier-hover:      rgba(120, 130, 160, 0.2);
+    --text-normal:                    rgba(220, 230, 255, 0.9);
+    --text-muted:                     rgba(140, 155, 185, 0.8);
+    --text-faint:                     rgba(120, 130, 160, 0.6);
+    --text-accent:                    rgba(96, 165, 250, 0.9);
+    --text-on-accent:                 rgba(220, 230, 255, 1);
+    --interactive-normal:             rgba(255, 255, 255, 0.07);
+    --interactive-hover:              rgba(120, 130, 160, 0.25);
+    --interactive-accent:             rgba(96, 165, 250, 0.9);
+    --interactive-accent-hover:       rgba(96, 165, 250, 1);
 }
 
 .vtt-canvas {
@@ -186,13 +206,13 @@
 }
 
 .vtt-toolbar-btn.is-active {
-    background: rgba(96, 165, 250, 0.18);
-    color: rgba(96, 165, 250, 1);
+    background: rgba(249, 115, 22, 0.18);
+    color: #f97316;
 }
 
 .vtt-toolbar-btn.is-active:hover {
-    background: rgba(96, 165, 250, 0.3);
-    color: rgba(96, 165, 250, 1);
+    background: rgba(249, 115, 22, 0.3);
+    color: #f97316;
 }
 
 /* Content browser */
@@ -240,8 +260,8 @@
 }
 
 .vtt-browser-tab.is-active {
-    background: rgba(120, 130, 160, 0.3);
-    color: rgba(220, 230, 255, 1);
+    background: rgba(249, 115, 22, 0.18);
+    color: #f97316;
 }
 
 .vtt-browser-search {
@@ -729,4 +749,48 @@
     border-radius: 6px;
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
     cursor: default;
+}
+
+/* Force dark mode on VTT confirm dialog regardless of Obsidian theme */
+
+.modal.vtt-confirm-modal {
+    color-scheme: dark;
+    background: rgba(20, 20, 35, 0.97);
+    border: 1px solid rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 0.9);
+}
+
+.modal.vtt-confirm-modal .modal-title {
+    color: rgba(220, 230, 255, 1);
+    border-bottom-color: rgba(120, 130, 160, 0.2);
+}
+
+.modal.vtt-confirm-modal .modal-content p {
+    color: rgba(180, 190, 210, 0.9);
+}
+
+.modal.vtt-confirm-modal button {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    color: rgba(180, 190, 210, 0.9);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    box-shadow: none;
+}
+
+.modal.vtt-confirm-modal button:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+.modal.vtt-confirm-modal button.mod-warning {
+    background: rgba(180, 60, 60, 0.18);
+    border-color: rgba(180, 60, 60, 0.4);
+    color: rgba(255, 120, 120, 0.95);
+}
+
+.modal.vtt-confirm-modal button.mod-warning:hover {
+    background: rgba(180, 60, 60, 0.32);
+    color: rgba(255, 120, 120, 1);
 }
