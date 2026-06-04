@@ -22,6 +22,10 @@ There are no automated tests — testing is manual (see below).
 - **NEVER run `git commit` or `git push`** under any circumstances.
 - **ALWAYS wait for explicit user approval** before executing any irreversible terminal commands.
 
+## Avoid Premature Optimization
+
+Write clear, correct code first. Optim ize only when you have evidence of a performance problem. Code that works correctly but slowly is better than fast code that's wrong or unmaintainable. In addition, readability matters -- optimized code is often harder to understand and maintain.
+
 ## Architecture
 
 ```
