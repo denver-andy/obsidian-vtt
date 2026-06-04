@@ -368,6 +368,49 @@
     white-space: nowrap;
 }
 
+.vtt-browser-folder-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    width: 100%;
+    padding: 3px 8px;
+    border: none;
+    background: transparent;
+    color: rgba(180, 190, 210, 0.75);
+    cursor: pointer;
+    text-align: left;
+    user-select: none;
+    transition: background 0.12s;
+}
+
+.vtt-browser-folder-header:hover {
+    background: rgba(120, 130, 160, 0.15);
+}
+
+.vtt-browser-folder-chevron {
+    display: flex;
+    align-items: center;
+    color: rgba(140, 155, 185, 0.6);
+    flex-shrink: 0;
+    transition: transform 0.15s;
+}
+
+.vtt-browser-folder-chevron.is-collapsed {
+    transform: rotate(-90deg);
+}
+
+.vtt-browser-folder-name {
+    font-size: 0.80em;
+    font-weight: 500;
+    color: rgba(160, 175, 205, 0.85);
+    font-family: monospace;
+}
+
+.vtt-browser-folder-content.is-hidden {
+    display: none;
+}
+
 /* Scene hierarchy */
 
 .vtt-hierarchy {
