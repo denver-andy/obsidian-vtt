@@ -1,7 +1,7 @@
 .vtt-map-container {
     position: relative;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 32px); /* exclude Obsidian status bar (~32px) */
     overflow: hidden;
     padding: 0;
     color-scheme: dark;
@@ -12,8 +12,9 @@
     --background-primary:             #0e0e1a;
     --background-secondary:           #14141e;
     --background-tertiary:            #14141e;
-    --background-modifier-form-field: rgba(255, 255, 255, 0.06);
-    --background-modifier-border:     rgba(120, 130, 160, 0.25);
+    --background-modifier-form-field:             rgba(255, 255, 255, 0.06);
+    --background-modifier-form-field-highlighted: rgba(255, 255, 255, 0.10);
+    --background-modifier-border:                 rgba(120, 130, 160, 0.25);
     --background-modifier-hover:      rgba(120, 130, 160, 0.2);
     --text-normal:                    rgba(220, 230, 255, 0.9);
     --text-muted:                     rgba(140, 155, 185, 0.8);
@@ -24,6 +25,10 @@
     --interactive-hover:              rgba(120, 130, 160, 0.25);
     --interactive-accent:             rgba(96, 165, 250, 0.9);
     --interactive-accent-hover:       rgba(96, 165, 250, 1);
+
+    /* Uniform inset for all floating UI panels. */
+    --vtt-inset: 16px;
+    --vtt-bottom-inset: calc(var(--vtt-inset) + 20px);
 }
 
 .vtt-canvas {
@@ -36,8 +41,8 @@
 
 .vtt-toolbar-group {
     position: absolute;
-    top: 12px;
-    left: 12px;
+    top: var(--vtt-inset);
+    left: var(--vtt-inset);
     z-index: 10;
     display: flex;
     flex-direction: row;
@@ -219,8 +224,8 @@
 
 .vtt-content-browser {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: var(--vtt-inset);
+    right: var(--vtt-inset);
     z-index: 10;
     width: 260px;
     display: flex;
@@ -367,8 +372,8 @@
 
 .vtt-hierarchy {
     position: absolute;
-    bottom: 12px;
-    left: 12px;
+    bottom: var(--vtt-bottom-inset);
+    left: var(--vtt-inset);
     z-index: 10;
     width: 300px;
     display: flex;
@@ -595,8 +600,8 @@
 
 .vtt-dice-tray {
     position: absolute;
-    bottom: 12px;
-    right: 12px;
+    bottom: var(--vtt-bottom-inset);
+    right: var(--vtt-inset);
     z-index: 10;
     width: 260px;
     display: flex;
@@ -749,6 +754,24 @@
     border-radius: 6px;
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
     cursor: default;
+}
+
+/* Obsidian's theme hover rules (e.g. .theme-light input:hover) have specificity
+   (0,2,1), which beats our single-class selectors at (0,1,0). Scoping under
+   .vtt-map-container raises our specificity to (0,3,0) so we always win. */
+
+.vtt-map-container .vtt-browser-search-input:hover,
+.vtt-map-container .vtt-dice-tray-formula-input:hover {
+    background: rgba(20, 25, 40, 0.5);
+}
+
+.vtt-map-container .vtt-hex-input:hover,
+.vtt-map-container .vtt-settings-row input[type="number"]:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.vtt-map-container .vtt-hierarchy-rename-input:hover {
+    background: rgba(15, 20, 45, 0.95);
 }
 
 /* Force dark mode on VTT confirm dialog regardless of Obsidian theme */
