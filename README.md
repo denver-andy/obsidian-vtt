@@ -2,7 +2,7 @@
 
 This project is a plugin for [Obsidian](https://obsidian.md). The purpose of the plugin is to implement a simple Virtual Tabletop (VTT) for tabletop role-playing games (TTRPGs), within Obsidian.
 
-NOTE THAT THIS PROJECT IS IN **ACTIVE DEVELOPMENT** AND NOT YET STABLE.
+NOTE THAT THIS PROJECT IS IN **ACTIVE DEVELOPMENT**, SO FEATURES MAY BE MODIFIED OR CHANGED.
 
 ## Why this plugin?
 
