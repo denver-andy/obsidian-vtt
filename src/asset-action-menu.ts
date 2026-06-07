@@ -3,6 +3,9 @@ import type { ScreenBounds } from './map-renderer';
 
 const MENU_GAP = 8;
 
+/** Persistent side panels that can cover the menu and make it unreachable. */
+const OBSCURING_PANEL_SELECTOR = '.vtt-dice-tray, .vtt-content-browser';
+
 export type ActionMode = 'move' | 'rotate' | 'resize';
 
 export interface AssetActionMenuOptions {
@@ -12,6 +15,7 @@ export interface AssetActionMenuOptions {
 }
 
 export class AssetActionMenu {
+	private readonly container: HTMLElement;
 	private readonly el: HTMLElement;
 	private readonly lockBtn: HTMLElement;
 	private readonly moveBtn: HTMLElement;
@@ -21,6 +25,7 @@ export class AssetActionMenu {
 	private lastIsLocked: boolean | null = null;
 
 	constructor(container: HTMLElement, options: AssetActionMenuOptions) {
+		this.container = container;
 		this.el = container.createEl('div', { cls: 'vtt-asset-menu' });
 		this.el.style.display = 'none';
 
@@ -101,14 +106,46 @@ export class AssetActionMenu {
 		const cx = bounds.x + bounds.w / 2;
 		const isNearTop = bounds.y < menuH + MENU_GAP * 2;
 
-		this.el.style.left = `${Math.round(cx - menuW / 2)}px`;
-		this.el.style.transform = '';
+		let left = cx - menuW / 2;
+		let top = isNearTop
+			? bounds.y + bounds.h + MENU_GAP
+			: bounds.y - menuH - MENU_GAP;
 
-		if (isNearTop) {
-			this.el.style.top = `${Math.round(bounds.y + bounds.h + MENU_GAP)}px`;
-		} else {
-			this.el.style.top = `${Math.round(bounds.y - menuH - MENU_GAP)}px`;
+		// Clamp to the visible canvas area so large assets or high zoom levels
+		// can't push the menu (partially) off screen and out of reach.
+		const containerW = this.container.clientWidth;
+		const containerH = this.container.clientHeight;
+		left = Math.max(MENU_GAP, Math.min(left, containerW - menuW - MENU_GAP));
+		top  = Math.max(MENU_GAP, Math.min(top,  containerH - menuH - MENU_GAP));
+
+		// For large/zoomed assets the on-screen position above can still land
+		// behind a persistent side panel (dice tray, content browser) and be
+		// unreachable. In that case fall back to dead-centre, which is always clear.
+		if (this.overlapsObscuringPanel(left, top, menuW, menuH)) {
+			left = (containerW - menuW) / 2;
+			top  = (containerH - menuH) / 2;
 		}
+
+		this.el.style.left = `${Math.round(left)}px`;
+		this.el.style.top = `${Math.round(top)}px`;
+		this.el.style.transform = '';
+	}
+
+	private overlapsObscuringPanel(left: number, top: number, w: number, h: number): boolean {
+		const containerRect = this.container.getBoundingClientRect();
+		const right = left + w;
+		const bottom = top + h;
+
+		const panels = Array.from(this.container.querySelectorAll<HTMLElement>(OBSCURING_PANEL_SELECTOR));
+		for (const el of panels) {
+			const r = el.getBoundingClientRect();
+			const elLeft   = r.left   - containerRect.left;
+			const elTop    = r.top    - containerRect.top;
+			const elRight  = r.right  - containerRect.left;
+			const elBottom = r.bottom - containerRect.top;
+			if (left < elRight && right > elLeft && top < elBottom && bottom > elTop) return true;
+		}
+		return false;
 	}
 
 	destroy(): void {
