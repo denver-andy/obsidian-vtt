@@ -6,11 +6,11 @@ NOTE THAT THIS PROJECT IS IN **ACTIVE DEVELOPMENT**, SO FEATURES MAY BE MODIFIED
 
 ## Screenshots
 
-![[screenshots/Screenshot_VTT_02.png]]
+![screenshots/Screenshot_VTT_02.png]
 
 > A VTT map using a pre-made background image created by [AfternoonMaps](https://www.deviantart.com/afternoonmaps/art/Woodland-Den-battle-map-20x20-Free-Version-764422915)
 
-![[screenshots/Screenshot_VTT_01.png]]
+![screenshots/Screenshot_VTT_01.png]
 
 > A VTT map created using tiles and objects by [Forgotten Adventures](https://www.forgotten-adventures.net/) 
 
