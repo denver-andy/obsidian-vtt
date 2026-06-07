@@ -5,6 +5,7 @@ import { LeftMenu } from './left-menu';
 import { SceneHierarchy, DeleteConfirmModal } from './scene-hierarchy';
 import { AssetActionMenu } from './asset-action-menu';
 import { DiceTray } from './dice-tray';
+import { ActorsPanel } from './actors-panel';
 import type { VTTPluginSettings } from './settings';
 import { DEFAULT_MAP_DATA, parseMapData, type MapData, type MapInstance } from './map-data';
 
@@ -24,6 +25,7 @@ export class VttView extends FileView {
 	private hierarchy: SceneHierarchy | null = null;
 	private actionMenu: AssetActionMenu | null = null;
 	private diceTray: DiceTray | null = null;
+	private actorsPanel: ActorsPanel | null = null;
 	private mapData: MapData = structuredClone(DEFAULT_MAP_DATA);
 	private autosaveId: number | null = null;
 	private lastSaved = '';
@@ -92,7 +94,7 @@ export class VttView extends FileView {
 				let isLocked: boolean;
 				if (bounds.isMulti) {
 					isLocked = [...this.currentSelection].every(id => {
-						for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
+						for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens', 'actors'] as const) {
 							const inst = this.mapData.layers[lid].find(i => i.id === id);
 							if (inst) return inst.locked ?? (lid === 'backgrounds' || lid === 'prefabs');
 						}
@@ -107,6 +109,11 @@ export class VttView extends FileView {
 			},
 		});
 
+		this.actorsPanel = new ActorsPanel(this.contentEl, {
+			app: this.app,
+			getResourcePath: (path) => this.app.vault.adapter.getResourcePath(path),
+		});
+
 		this.leftMenu = new LeftMenu(this.contentEl, {
 			initialCellSize:       this.mapData.settings.cellSize,
 			initialPanSpeed:       this.mapData.settings.panSpeed,
@@ -118,6 +125,7 @@ export class VttView extends FileView {
 			onReset:   () => this.renderer?.resetCamera(),
 			onZoomIn:  () => this.renderer?.zoomIn(),
 			onZoomOut: () => this.renderer?.zoomOut(),
+			onActorsToggle: () => this.actorsPanel?.toggle(),
 			onCellSizeChange: val => {
 				this.mapData.settings.cellSize = val;
 				this.plugin.settings.cellSize = val;
@@ -202,7 +210,7 @@ export class VttView extends FileView {
 		this.actionMenu = new AssetActionMenu(this.contentEl, {
 			onLockToggle: () => {
 				for (const id of this.currentSelection) {
-					for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
+					for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens', 'actors'] as const) {
 						if (this.mapData.layers[lid].some(i => i.id === id)) {
 							this.toggleLocked(lid, id);
 							break;
@@ -219,7 +227,7 @@ export class VttView extends FileView {
 				const label = ids.length > 1 ? `${ids.length} assets` : 'this asset';
 				new DeleteConfirmModal(this.app, label, () => {
 					for (const id of ids) {
-						for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
+						for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens', 'actors'] as const) {
 							const idx = this.mapData.layers[lid].findIndex(i => i.id === id);
 							if (idx !== -1) { this.mapData.layers[lid].splice(idx, 1); break; }
 						}
@@ -252,6 +260,8 @@ export class VttView extends FileView {
 		this.actionMenu = null;
 		this.diceTray?.destroy();
 		this.diceTray = null;
+		this.actorsPanel?.destroy();
+		this.actorsPanel = null;
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {
@@ -303,15 +313,19 @@ export class VttView extends FileView {
 
 		if (!this.renderer) return; // view closed while image was loading
 
+		const cellSize = this.mapData.settings.cellSize;
 		const instance: MapInstance = {
 			id: crypto.randomUUID(),
 			assetPath: data.assetPath,
 			x: data.worldX,
 			y: data.worldY,
-			width:  img.naturalWidth  || this.mapData.settings.cellSize,
-			height: img.naturalHeight || this.mapData.settings.cellSize,
+			width:  img.naturalWidth  || cellSize,
+			height: img.naturalHeight || cellSize,
 			rotation: 0,
 			...(data.category === 'backgrounds' || data.category === 'prefabs' ? { locked: true } : {}),
+			...(data.actorNotePath ? { actorNotePath: data.actorNotePath } : {}),
+			...(data.actorType     ? { actorType:     data.actorType }     : {}),
+			...(data.actorName     ? { label:         data.actorName }     : {}),
 		};
 
 		const layer = data.category as keyof typeof this.mapData.layers;

@@ -19,6 +19,10 @@ export interface AssetDropData {
 	category: string;
 	worldX: number;
 	worldY: number;
+	/** Set when an actor (character note) is dropped. */
+	actorNotePath?: string;
+	actorType?: string;
+	actorName?: string;
 }
 
 export interface MapLayers {
@@ -27,6 +31,7 @@ export interface MapLayers {
 	prefabs: MapInstance[];
 	objects: MapInstance[];
 	tokens: MapInstance[];
+	actors: MapInstance[];
 }
 
 export interface ScreenBounds {
@@ -79,7 +84,7 @@ export class MapRenderer {
 	private readonly getResourcePath: (path: string) => string;
 	private readonly onAssetDrop?: (data: AssetDropData) => void;
 
-	private layers: MapLayers = { backgrounds: [], tiles: [], prefabs: [], objects: [], tokens: [] };
+	private layers: MapLayers = { backgrounds: [], tiles: [], prefabs: [], objects: [], tokens: [], actors: [] };
 	private selectedIds = new Set<string>();
 	private readonly imageCache = new Map<string, HTMLImageElement | null>();
 
@@ -358,7 +363,7 @@ export class MapRenderer {
 			const [instanceId] = this.selectedIds;
 			let inst: MapInstance | undefined;
 			let layerId: keyof MapLayers | undefined;
-			for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
+			for (const lid of ['actors', 'tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 				const found = this.layers[lid].find(i => i.id === instanceId);
 				if (found) { inst = found; layerId = lid; break; }
 			}
@@ -378,7 +383,7 @@ export class MapRenderer {
 		// Move and rotate support multi-select.
 		// Find the topmost selected, unlocked, non-hidden instance under the cursor.
 		let clickedInst: MapInstance | undefined;
-		for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
+		for (const lid of ['actors', 'tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 			const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
 			for (let i = this.layers[lid].length - 1; i >= 0; i--) {
 				const inst = this.layers[lid][i]!;
@@ -396,7 +401,7 @@ export class MapRenderer {
 
 		// Collect every selected, unlocked, non-hidden instance for the drag.
 		this.dragInstances = [];
-		for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
+		for (const lid of ['actors', 'tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 			const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
 			for (const inst of this.layers[lid]) {
 				if (this.selectedIds.has(inst.id) && !inst.hidden && !(inst.locked ?? defaultLocked)) {
@@ -504,7 +509,7 @@ export class MapRenderer {
 			// Resize is single-selection only.
 			if (this.selectedIds.size !== 1) { this.canvas.style.cursor = ''; return; }
 			const [instanceId] = this.selectedIds;
-			for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
+			for (const lid of ['actors', 'tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 				const inst = this.layers[lid].find(i => i.id === instanceId);
 				if (!inst || inst.hidden) continue;
 				const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
@@ -517,7 +522,7 @@ export class MapRenderer {
 
 		// Move/rotate: show cursor when hovering any selected, unlocked, non-hidden instance.
 		const hoverCursor = this.activeMode === 'move' ? 'grab' : 'ew-resize';
-		for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
+		for (const lid of ['actors', 'tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 			const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
 			for (let i = this.layers[lid].length - 1; i >= 0; i--) {
 				const inst = this.layers[lid][i]!;
@@ -551,7 +556,7 @@ export class MapRenderer {
 	private hitTest(cssX: number, cssY: number): MapInstance | null {
 		const worldX = (cssX - this.panX) / this.zoom;
 		const worldY = (cssY - this.panY) / this.zoom;
-		const layerOrder: (keyof MapLayers)[] = ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'];
+		const layerOrder: (keyof MapLayers)[] = ['actors', 'tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'];
 		for (const layerId of layerOrder) {
 			const layer = this.layers[layerId];
 			const defaultLocked = layerId === 'backgrounds' || layerId === 'prefabs';
@@ -622,7 +627,7 @@ export class MapRenderer {
 		if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
 			if (this.selectedIds.size === 1) {
 				const [instanceId] = this.selectedIds;
-				for (const lid of ['tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
+				for (const lid of ['actors', 'tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 					if (this.layers[lid].some(i => i.id === instanceId)) {
 						e.preventDefault();
 						this.onCopySelection?.(instanceId!, lid);
@@ -654,17 +659,22 @@ export class MapRenderer {
 	}
 
 	private onDragOver(e: DragEvent) {
-		if (!e.dataTransfer?.types.includes('application/vtt-asset')) return;
+		const types = e.dataTransfer?.types;
+		if (!types?.includes('application/vtt-asset') && !types?.includes('application/vtt-actor')) return;
 		e.preventDefault();
-		e.dataTransfer.dropEffect = 'copy';
+		e.dataTransfer!.dropEffect = 'copy';
 	}
 
 	private onDrop(e: DragEvent) {
 		e.preventDefault();
-		const raw = e.dataTransfer?.getData('application/vtt-asset');
+
+		const isActor = e.dataTransfer?.types.includes('application/vtt-actor');
+		const raw = isActor
+			? e.dataTransfer?.getData('application/vtt-actor')
+			: e.dataTransfer?.getData('application/vtt-asset');
 		if (!raw) return;
 
-		let parsed: { assetPath: string; resourceUrl: string; category: string };
+		let parsed: { assetPath: string; resourceUrl: string; category: string; actorNotePath?: string; actorType?: string; actorName?: string };
 		try {
 			parsed = JSON.parse(raw) as typeof parsed;
 		} catch {
@@ -687,6 +697,9 @@ export class MapRenderer {
 			category:    parsed.category,
 			worldX:      snappedX,
 			worldY:      snappedY,
+			...(parsed.actorNotePath ? { actorNotePath: parsed.actorNotePath } : {}),
+			...(parsed.actorType     ? { actorType:     parsed.actorType }     : {}),
+			...(parsed.actorName     ? { actorName:     parsed.actorName }     : {}),
 		});
 	}
 
@@ -727,11 +740,12 @@ export class MapRenderer {
 		// Objects and tokens sit above the grid.
 		this.drawLayer(this.layers.objects);
 		this.drawLayer(this.layers.tokens);
+		this.drawLayer(this.layers.actors);
 
 		// Selection boxes drawn last so they always appear on top.
 		if (this.selectedIds.size > 0) {
 			const showHandle = this.activeMode === 'resize' && this.selectedIds.size === 1;
-			for (const layerId of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
+			for (const layerId of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens', 'actors'] as const) {
 				for (const inst of this.layers[layerId]) {
 					if (!inst.hidden && this.selectedIds.has(inst.id)) {
 						this.drawSelectionBox(inst);
@@ -756,7 +770,7 @@ export class MapRenderer {
 		let firstLayerId: keyof MapLayers | null = null;
 		let count = 0;
 
-		for (const layerId of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens'] as const) {
+		for (const layerId of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens', 'actors'] as const) {
 			for (const inst of this.layers[layerId]) {
 				if (!this.selectedIds.has(inst.id) || inst.hidden) continue;
 				if (firstId === null) { firstId = inst.id; firstLayerId = layerId; }

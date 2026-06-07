@@ -9,6 +9,10 @@ export interface MapInstance {
 	hidden?: true;
 	locked?: boolean;
 	label?: string;
+	/** Vault-relative path to the linked character note. Present on actor instances only. */
+	actorNotePath?: string;
+	/** Character type ('pc' | 'npc' | 'beast'). Present on actor instances only. */
+	actorType?: string;
 }
 
 export type MeasureDiagonal = 'exact' | 'one-to-one' | 'alternating' | 'no-diagonal';
@@ -35,6 +39,7 @@ export interface MapData {
 		prefabs: MapInstance[];
 		objects: MapInstance[];
 		tokens: MapInstance[];
+		actors: MapInstance[];
 	};
 }
 
@@ -60,6 +65,7 @@ export const DEFAULT_MAP_DATA: MapData = {
 		prefabs: [],
 		objects: [],
 		tokens: [],
+		actors: [],
 	},
 };
 
@@ -99,6 +105,7 @@ export function parseMapData(content: string, defaults?: ParseDefaults): MapData
 				prefabs:     asInstances(l?.['prefabs']),
 				objects:     asInstances(l?.['objects']),
 				tokens:      asInstances(l?.['tokens']),
+				actors:      asInstances(l?.['actors']),
 			},
 		};
 	} catch {
@@ -143,6 +150,8 @@ function asInstance(val: unknown): MapInstance | null {
 		...(obj['hidden'] === true ? { hidden: true as const } : {}),
 		...(typeof obj['locked'] === 'boolean' ? { locked: obj['locked'] } : {}),
 		...(typeof obj['label'] === 'string' && obj['label'] ? { label: obj['label'] } : {}),
+		...(typeof obj['actorNotePath'] === 'string' && obj['actorNotePath'] ? { actorNotePath: obj['actorNotePath'] } : {}),
+		...(typeof obj['actorType'] === 'string' && obj['actorType'] ? { actorType: obj['actorType'] } : {}),
 	};
 }
 

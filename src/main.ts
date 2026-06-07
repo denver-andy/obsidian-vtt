@@ -1,7 +1,8 @@
-import { addIcon, Plugin, WorkspaceLeaf } from 'obsidian';
+import { addIcon, Plugin, TFile, WorkspaceLeaf } from 'obsidian';
 import { DEFAULT_SETTINGS, VTTPluginSettings, VTTSettingTab } from './settings';
 import { VTT_VIEW_TYPE, VttView } from './vtt-view';
 import { DEFAULT_MAP_DATA } from './map-data';
+import { CharacterModal, CHARACTER_TYPE_CONFIGS, VttCharacterType } from './character-modal';
 
 export default class VTTPlugin extends Plugin {
 	settings!: VTTPluginSettings;
@@ -28,6 +29,31 @@ export default class VTTPlugin extends Plugin {
 		this.addRibbonIcon('map', 'New VTT map', () => { void this.createAndOpenMap(); });
 
 		this.addSettingTab(new VTTSettingTab(this.app, this));
+
+		this.registerEvent(this.app.workspace.on('file-menu', (menu, abstractFile) => {
+			if (!(abstractFile instanceof TFile) || abstractFile.extension !== 'md') return;
+			const file = abstractFile;
+
+			menu.addItem(item => {
+				// setSubmenu() exists at runtime but is not yet in the installed type definitions.
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const submenu = (item.setTitle('VTT').setIcon('map') as any).setSubmenu();
+
+				for (const type of ['pc', 'npc', 'beast'] as VttCharacterType[]) {
+					const config = CHARACTER_TYPE_CONFIGS[type];
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					submenu.addItem((sub: any) =>
+						sub.setTitle(config.label).setIcon(config.icon).onClick(() => {
+							new CharacterModal(this.app, file, type, {
+								pluginDir: this.manifest.dir ?? '',
+								adapter: this.app.vault.adapter,
+								customTokensFolder: this.settings.tokensFolder,
+							}).open();
+						}),
+					);
+				}
+			});
+		}));
 	}
 
 	onunload() {}

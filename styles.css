@@ -809,6 +809,460 @@
     cursor: default;
 }
 
+/* ── Actors Panel ─────────────────────────────────────────────────────────── */
+
+.vtt-actors-panel {
+    position: absolute;
+    top: var(--vtt-inset);
+    left: 60px; /* clears the 38px toolbar + 16px inset + 6px gap */
+    z-index: 10;
+    width: 240px;
+    max-height: calc(100% - var(--vtt-inset) - var(--vtt-bottom-inset));
+    display: none;
+    flex-direction: column;
+    background: rgba(20, 20, 35, 0.88);
+    border: 1px solid rgba(120, 130, 160, 0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+}
+
+.vtt-actors-panel.is-open {
+    display: flex;
+}
+
+/* Header: tabs + refresh button */
+.vtt-actors-header {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px 4px 6px;
+    border-bottom: 1px solid rgba(120, 130, 160, 0.2);
+    gap: 4px;
+}
+
+.vtt-actors-tabs {
+    display: flex;
+    flex: 1;
+    gap: 2px;
+}
+
+.vtt-actors-tab {
+    flex: 1;
+    height: 26px;
+    padding: 0 4px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: rgba(140, 155, 185, 0.65);
+    font-size: 0.78em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    white-space: nowrap;
+}
+
+.vtt-actors-tab:hover {
+    background: rgba(120, 130, 160, 0.2);
+    color: rgba(220, 230, 255, 1);
+}
+
+.vtt-actors-tab.is-active {
+    background: rgba(249, 115, 22, 0.18);
+    color: #f97316;
+}
+
+.vtt-actors-header-btn {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: rgba(140, 155, 185, 0.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+}
+
+.vtt-actors-header-btn:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+/* Search bar */
+.vtt-actors-search {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+    border-bottom: 1px solid rgba(120, 130, 160, 0.2);
+}
+
+.vtt-actors-search-input {
+    flex: 1;
+    height: 24px;
+    padding: 0 7px;
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 4px;
+    background: rgba(20, 25, 40, 0.5);
+    color: rgba(220, 230, 255, 0.9);
+    font-size: 0.80em;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.vtt-actors-search-input::placeholder {
+    color: rgba(120, 130, 160, 0.55);
+}
+
+.vtt-actors-search-input:focus {
+    border-color: rgba(120, 130, 160, 0.55);
+}
+
+.vtt-actors-search-clear {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    background: transparent;
+    color: rgba(180, 190, 210, 0.45);
+    font-size: 1em;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.vtt-actors-search-clear:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+/* Character list */
+.vtt-actors-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vtt-actors-empty {
+    font-size: 0.82em;
+    color: rgba(140, 155, 185, 0.7);
+    text-align: center;
+    padding: 12px 8px 4px;
+}
+
+.vtt-actors-empty-hint {
+    font-size: 0.75em;
+    color: rgba(120, 130, 160, 0.55);
+    text-align: center;
+    padding: 0 8px 10px;
+    font-style: italic;
+}
+
+.vtt-actors-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(120, 130, 160, 0.15);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.12s;
+}
+
+.vtt-actors-card--draggable {
+    cursor: grab;
+}
+
+.vtt-actors-card--draggable:active {
+    cursor: grabbing;
+}
+
+.vtt-actors-card--draggable:hover {
+    border-color: rgba(120, 130, 160, 0.35);
+}
+
+.vtt-actors-card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 6px 6px 8px;
+}
+
+.vtt-actors-token {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(120, 130, 160, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(140, 155, 185, 0.6);
+}
+
+.vtt-actors-token-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none; /* prevent thumb hijacking the card drag */
+}
+
+.vtt-actors-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.vtt-actors-name {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: rgba(220, 230, 255, 0.95);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vtt-actors-open-btn {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: rgba(140, 155, 185, 0.55);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+}
+
+.vtt-actors-open-btn:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(96, 165, 250, 0.9);
+}
+
+.vtt-actors-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 8px;
+    padding: 4px 10px 8px;
+    border-top: 1px solid rgba(120, 130, 160, 0.12);
+}
+
+.vtt-actors-field-row {
+    display: contents;
+}
+
+.vtt-actors-field-key {
+    font-size: 0.72em;
+    color: rgba(140, 155, 185, 0.7);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-transform: capitalize;
+}
+
+.vtt-actors-field-val {
+    font-size: 0.72em;
+    color: rgba(200, 210, 235, 0.9);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.vtt-actors-dv-notice {
+    font-size: 0.72em;
+    color: rgba(120, 130, 160, 0.5);
+    text-align: center;
+    padding: 6px 8px;
+    font-style: italic;
+    border-top: 1px solid rgba(120, 130, 160, 0.1);
+}
+
+/* Override Obsidian hover rules inside the actors panel */
+.vtt-map-container .vtt-actors-search-input:hover {
+    background: rgba(20, 25, 40, 0.5);
+}
+
+/* ── End Actors Panel ─────────────────────────────────────────────────────── */
+
+/* ── Character Modal ─────────────────────────────────────────────────────── */
+
+.vtt-character-modal {
+    color-scheme: dark;
+    background: rgba(20, 20, 35, 0.97);
+    border: 1px solid rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 0.9);
+    width: 340px;
+}
+
+.vtt-character-modal .modal-title {
+    color: rgba(220, 230, 255, 1);
+    border-bottom-color: rgba(120, 130, 160, 0.2);
+    font-size: 1em;
+}
+
+.vtt-character-modal .modal-content {
+    padding: 12px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.vtt-cmodal-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.vtt-cmodal-label {
+    font-size: 0.78em;
+    font-weight: 600;
+    color: rgba(140, 155, 185, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.vtt-cmodal-input {
+    width: 100%;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(220, 230, 255, 0.95);
+    font-size: 0.9em;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.vtt-cmodal-input:focus {
+    border-color: rgba(96, 165, 250, 0.5);
+}
+
+/* Search bar scoped inside the modal (removes bottom border, adjusts padding) */
+.vtt-cmodal-search {
+    border-bottom: none;
+    padding: 0 0 4px;
+}
+
+/* Token picker container — fixed height so the modal stays a manageable size */
+.vtt-cmodal-picker {
+    height: 220px;
+    border: 1px solid rgba(120, 130, 160, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.vtt-cmodal-picker .vtt-browser-panel {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Selected token preview row */
+.vtt-cmodal-selection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 26px;
+}
+
+.vtt-cmodal-selection-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 1px solid rgba(120, 130, 160, 0.3);
+}
+
+.vtt-cmodal-selection-path {
+    font-size: 0.75em;
+    color: rgba(140, 155, 185, 0.8);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: monospace;
+}
+
+.vtt-cmodal-no-selection {
+    font-size: 0.78em;
+    color: rgba(120, 130, 160, 0.5);
+    font-style: italic;
+}
+
+/* Buttons */
+.vtt-cmodal-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 2px;
+}
+
+.vtt-cmodal-btn {
+    height: 30px;
+    padding: 0 14px;
+    border: 1px solid rgba(120, 130, 160, 0.3);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(180, 190, 210, 0.9);
+    font-size: 0.85em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.vtt-cmodal-btn:hover {
+    background: rgba(120, 130, 160, 0.25);
+    color: rgba(220, 230, 255, 1);
+}
+
+.vtt-cmodal-btn--primary {
+    background: rgba(96, 165, 250, 0.15);
+    border-color: rgba(96, 165, 250, 0.35);
+    color: rgba(96, 165, 250, 0.95);
+}
+
+.vtt-cmodal-btn--primary:hover {
+    background: rgba(96, 165, 250, 0.28);
+    color: rgba(160, 210, 255, 1);
+    border-color: rgba(96, 165, 250, 0.55);
+}
+
+.vtt-cmodal-btn-icon {
+    display: flex;
+    align-items: center;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* Selected state for AssetPicker items in select mode */
+.vtt-browser-item.is-selected {
+    background: rgba(96, 165, 250, 0.18);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+}
+
+.vtt-browser-item.is-selected:hover {
+    background: rgba(96, 165, 250, 0.25);
+}
+
+/* ── End Character Modal ─────────────────────────────────────────────────── */
+
 /* Obsidian's theme hover rules (e.g. .theme-light input:hover) have specificity
    (0,2,1), which beats our single-class selectors at (0,1,0). Scoping under
    .vtt-map-container raises our specificity to (0,3,0) so we always win. */

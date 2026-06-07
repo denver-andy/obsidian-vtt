@@ -20,6 +20,7 @@ export interface LeftMenuOptions {
 	onMeasureUnitLabelChange: (val: string) => void;
 	onMeasureDiagonalChange: (val: MeasureDiagonal) => void;
 	onMeasureToolToggle: (active: boolean) => void;
+	onActorsToggle: () => void;
 }
 
 export class LeftMenu {
@@ -42,6 +43,13 @@ export class LeftMenu {
 		this.addToolbarBtn(toolbar, 'home',     'Reset view', options.onReset);
 		this.addToolbarBtn(toolbar, 'zoom-out', 'Zoom out',   options.onZoomOut);
 		this.addToolbarBtn(toolbar, 'zoom-in',  'Zoom in',    options.onZoomIn);
+
+		let actorsActive = false;
+		const actorsBtn = this.addToolbarBtn(toolbar, 'users', 'Actors', () => {
+			actorsActive = !actorsActive;
+			actorsBtn.toggleClass('is-active', actorsActive);
+			options.onActorsToggle();
+		});
 
 		this.measureBtn = this.addToolbarBtn(toolbar, 'ruler', 'Measure', () => {
 			this.measureToolActive = !this.measureToolActive;
