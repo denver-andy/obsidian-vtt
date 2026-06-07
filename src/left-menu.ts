@@ -48,6 +48,11 @@ export class LeftMenu {
 		const actorsBtn = this.addToolbarBtn(toolbar, 'users', 'Actors', () => {
 			actorsActive = !actorsActive;
 			actorsBtn.toggleClass('is-active', actorsActive);
+			if (actorsActive) {
+				// Only one sub-menu may be open at a time.
+				settingsPanel.removeClass('is-open');
+				settingsBtn.removeClass('is-active');
+			}
 			options.onActorsToggle();
 		});
 
@@ -62,6 +67,12 @@ export class LeftMenu {
 			const open = !settingsPanel.hasClass('is-open');
 			settingsPanel.toggleClass('is-open', open);
 			settingsBtn.toggleClass('is-active', open);
+			if (open && actorsActive) {
+				// Only one sub-menu may be open at a time.
+				actorsActive = false;
+				actorsBtn.removeClass('is-active');
+				options.onActorsToggle();
+			}
 		});
 
 		this.el = group;
