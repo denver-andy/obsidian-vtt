@@ -8,6 +8,7 @@ import { DiceTray } from './dice-tray';
 import { ActorsPanel } from './actors-panel';
 import type { VTTPluginSettings } from './settings';
 import { DEFAULT_MAP_DATA, parseMapData, type MapData, type MapInstance } from './map-data';
+import { UndoManager } from './undo-manager';
 
 export const VTT_VIEW_TYPE = 'vtt-map';
 
@@ -31,6 +32,8 @@ export class VttView extends FileView {
 	private lastSaved = '';
 	private clipboard: { instance: MapInstance; layerId: keyof MapData['layers'] } | null = null;
 	private currentSelection = new Set<string>();
+	private readonly undoHistory = new UndoManager<MapData['layers']>();
+	private pendingUndoSnapshot: MapData['layers'] | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: PluginRef) {
 		super(leaf);
@@ -80,6 +83,7 @@ export class VttView extends FileView {
 				if (!this.clipboard || !this.renderer) return;
 				const { instance, layerId } = this.clipboard;
 				const newInst: MapInstance = { ...structuredClone(instance), id: crypto.randomUUID(), x: worldX, y: worldY };
+				this.recordUndoSnapshot();
 				this.mapData.layers[layerId].push(newInst);
 				const newSel = new Set([newInst.id]);
 				this.currentSelection = newSel;
@@ -107,6 +111,15 @@ export class VttView extends FileView {
 				}
 				this.actionMenu.update(bounds, isLocked, onModeChange);
 			},
+			onTransactionStart: () => {
+				this.pendingUndoSnapshot = this.snapshotLayers();
+			},
+			onTransactionEnd: (changed) => {
+				if (changed && this.pendingUndoSnapshot) this.undoHistory.record(this.pendingUndoSnapshot);
+				this.pendingUndoSnapshot = null;
+			},
+			onUndo: () => this.performUndo(),
+			onRedo: () => this.performRedo(),
 		});
 
 		this.actorsPanel = new ActorsPanel(this.contentEl, {
@@ -183,6 +196,7 @@ export class VttView extends FileView {
 				const layer = this.mapData.layers[layerId];
 				const inst = layer.find(i => i.id === instanceId);
 				if (!inst) return;
+				this.recordUndoSnapshot();
 				inst.hidden = inst.hidden ? undefined : true;
 				this.renderer?.setLayers(this.mapData.layers);
 				this.hierarchy?.setLayers(this.mapData.layers);
@@ -191,6 +205,7 @@ export class VttView extends FileView {
 				const layer = this.mapData.layers[layerId];
 				const idx = layer.findIndex(i => i.id === instanceId);
 				if (idx === -1) return;
+				this.recordUndoSnapshot();
 				layer.splice(idx, 1);
 				this.renderer?.setLayers(this.mapData.layers);
 				this.hierarchy?.setLayers(this.mapData.layers);
@@ -198,6 +213,7 @@ export class VttView extends FileView {
 			onRename: (layerId, instanceId, newLabel) => {
 				const inst = this.mapData.layers[layerId].find(i => i.id === instanceId);
 				if (!inst) return;
+				this.recordUndoSnapshot();
 				if (newLabel !== undefined) {
 					inst.label = newLabel;
 				} else {
@@ -226,6 +242,7 @@ export class VttView extends FileView {
 				if (ids.length === 0) return;
 				const label = ids.length > 1 ? `${ids.length} assets` : 'this asset';
 				new DeleteConfirmModal(this.app, label, () => {
+					this.recordUndoSnapshot();
 					for (const id of ids) {
 						for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens', 'actors'] as const) {
 							const idx = this.mapData.layers[lid].findIndex(i => i.id === id);
@@ -272,6 +289,8 @@ export class VttView extends FileView {
 			measureDiagonal:  this.plugin.settings.defaultMeasureDiagonal,
 		});
 		this.lastSaved = JSON.stringify(this.mapData);
+		this.undoHistory.clear();
+		this.pendingUndoSnapshot = null;
 		this.applyMapData();
 	}
 
@@ -296,6 +315,42 @@ export class VttView extends FileView {
 		this.renderer?.setMeasureConfig(measureUnits, measureUnitLabel, measureDiagonal);
 		this.hierarchy?.setLayers(this.mapData.layers);
 		this.leftMenu?.applySettings(cellSize, panSpeed, gridColor, showGrid, measureUnits, measureUnitLabel, measureDiagonal);
+	}
+
+	/** Deep clone of the current layers, suitable for an undo/redo snapshot. */
+	private snapshotLayers(): MapData['layers'] {
+		return structuredClone(this.mapData.layers);
+	}
+
+	/** Record the pre-change state for an instantaneous (non-drag) edit. Call before mutating. */
+	private recordUndoSnapshot() {
+		this.undoHistory.record(this.snapshotLayers());
+	}
+
+	private performUndo() {
+		const restored = this.undoHistory.undo(this.snapshotLayers());
+		if (restored) this.applyRestoredLayers(restored);
+	}
+
+	private performRedo() {
+		const restored = this.undoHistory.redo(this.snapshotLayers());
+		if (restored) this.applyRestoredLayers(restored);
+	}
+
+	private applyRestoredLayers(layers: MapData['layers']) {
+		this.mapData.layers = layers;
+
+		const allIds = new Set<string>();
+		for (const lid of ['backgrounds', 'tiles', 'prefabs', 'objects', 'tokens', 'actors'] as const) {
+			for (const inst of this.mapData.layers[lid]) allIds.add(inst.id);
+		}
+		const newSelection = new Set([...this.currentSelection].filter(id => allIds.has(id)));
+		this.currentSelection = newSelection;
+
+		this.renderer?.setLayers(this.mapData.layers);
+		this.renderer?.setSelectedIds(newSelection);
+		this.hierarchy?.setLayers(this.mapData.layers);
+		this.hierarchy?.setSelection(newSelection);
 	}
 
 	private async handleAssetDrop(data: AssetDropData) {
@@ -330,6 +385,7 @@ export class VttView extends FileView {
 
 		const layer = data.category as keyof typeof this.mapData.layers;
 		if (layer in this.mapData.layers) {
+			this.recordUndoSnapshot();
 			this.mapData.layers[layer].push(instance);
 			this.renderer.setLayers(this.mapData.layers);
 			this.hierarchy?.setLayers(this.mapData.layers);
@@ -353,6 +409,7 @@ export class VttView extends FileView {
 		const defaultLocked = layerId === 'backgrounds' || layerId === 'prefabs';
 		const effectiveLocked = inst.locked ?? defaultLocked;
 		const newValue = !effectiveLocked;
+		this.recordUndoSnapshot();
 		if (newValue === defaultLocked) {
 			delete inst.locked;
 		} else {

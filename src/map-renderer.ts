@@ -70,6 +70,15 @@ export interface MapConfig {
 	/** Fired when the user presses Ctrl/Cmd+V, with the snapped world position
 	 *  at the center of the viewport as the suggested paste location. */
 	onPasteRequest?: (worldX: number, worldY: number) => void;
+	/** Fired once when a move/rotate/resize drag begins (for undo snapshotting). */
+	onTransactionStart?: () => void;
+	/** Fired once when a move/rotate/resize drag ends; `changed` mirrors whether
+	 *  the gesture actually altered any instance (a click that never dragged reports false). */
+	onTransactionEnd?: (changed: boolean) => void;
+	/** Fired when the user presses Ctrl/Cmd+Z (without Shift). */
+	onUndo?: () => void;
+	/** Fired when the user presses Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y. */
+	onRedo?: () => void;
 }
 
 export class MapRenderer {
@@ -125,6 +134,10 @@ export class MapRenderer {
 	private readonly onMeasureDeactivate?: () => void;
 	private readonly onCopySelection?: (instanceId: string, layerId: keyof MapLayers) => void;
 	private readonly onPasteRequest?: (worldX: number, worldY: number) => void;
+	private readonly onTransactionStart?: () => void;
+	private readonly onTransactionEnd?: (changed: boolean) => void;
+	private readonly onUndo?: () => void;
+	private readonly onRedo?: () => void;
 	private readonly onMultiToggle?: (instanceId: string) => void;
 
 	// Offset of the canvas's top-left corner within its positioning container.
@@ -158,6 +171,10 @@ export class MapRenderer {
 		this.onCopySelection = config.onCopySelection;
 		this.onPasteRequest = config.onPasteRequest;
 		this.onMultiToggle = config.onMultiToggle;
+		this.onTransactionStart = config.onTransactionStart;
+		this.onTransactionEnd = config.onTransactionEnd;
+		this.onUndo = config.onUndo;
+		this.onRedo = config.onRedo;
 
 		this.canvas = document.createElement('canvas');
 		this.canvas.classList.add('vtt-canvas');
@@ -381,6 +398,7 @@ export class MapRenderer {
 			this.dragInst = inst;
 			this.dragInstances = [inst];
 			this.dragLayerId = layerId;
+			this.onTransactionStart?.();
 			this.dragResizeOrigRotation = inst.rotation;
 			this.dragResizeOrigWidth = inst.width;
 			this.dragResizeOrigHeight = inst.height;
@@ -422,6 +440,8 @@ export class MapRenderer {
 				}
 			}
 		}
+
+		this.onTransactionStart?.();
 
 		if (this.activeMode === 'move') {
 			this.dragOffsetWorldX = worldX - clickedInst.x;
@@ -580,6 +600,7 @@ export class MapRenderer {
 			this.dragInst.rotation = this.dragResizeOrigRotation;
 			this.draw();
 		}
+		this.onTransactionEnd?.(this.dragMoved);
 		this.dragInst = null;
 		this.dragInstances = [];
 		this.dragLayerId = null;
@@ -682,6 +703,19 @@ export class MapRenderer {
 			return;
 		}
 
+		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+			e.preventDefault();
+			if (e.shiftKey) this.onRedo?.();
+			else this.onUndo?.();
+			return;
+		}
+
+		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+			e.preventDefault();
+			this.onRedo?.();
+			return;
+		}
+
 		if (!PAN_KEYS.has(e.key) || !(e.ctrlKey || e.metaKey)) return;
 		e.preventDefault();
 		const step = this.cellSize * this.zoom;
@@ -701,6 +735,7 @@ export class MapRenderer {
 
 	private onDrop(e: DragEvent) {
 		e.preventDefault();
+		this.canvas.focus();
 
 		const isActor = e.dataTransfer?.types.includes('application/vtt-actor');
 		const raw = isActor
