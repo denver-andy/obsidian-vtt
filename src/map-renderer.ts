@@ -13,6 +13,10 @@ const ROTATE_SNAP_RAD = 15 * Math.PI / 180;
 // Resize handle: drawn circle radius in CSS pixels (also used as hit-test radius).
 const HANDLE_CSS_RADIUS = 8;
 
+// Free (Shift-held) object resize: lower bound on the uniform scale factor, so the
+// asset can shrink well below one grid cell without collapsing to nothing.
+const MIN_FREE_RESIZE_SCALE = 0.05;
+
 export interface AssetDropData {
 	assetPath: string;
 	resourceUrl: string;
@@ -99,11 +103,14 @@ export class MapRenderer {
 
 	private dragInst: MapInstance | null = null;
 	private dragInstances: MapInstance[] = [];
+	private dragLayerId: keyof MapLayers | null = null;
 	private dragOffsetWorldX = 0;
 	private dragOffsetWorldY = 0;
 	private dragRotateStartX = 0;
 	private dragStartRotations = new Map<string, number>();
 	private dragResizeOrigRotation = 0;
+	private dragResizeOrigWidth = 0;
+	private dragResizeOrigHeight = 0;
 	private dragMoved = false;
 
 	private panDragActive = false;
@@ -373,7 +380,10 @@ export class MapRenderer {
 			if (!this.isOnResizeHandle(inst, worldX, worldY)) return;
 			this.dragInst = inst;
 			this.dragInstances = [inst];
+			this.dragLayerId = layerId;
 			this.dragResizeOrigRotation = inst.rotation;
+			this.dragResizeOrigWidth = inst.width;
+			this.dragResizeOrigHeight = inst.height;
 			inst.rotation = 0;
 			this.canvas.style.cursor = 'nwse-resize';
 			e.preventDefault();
@@ -383,6 +393,7 @@ export class MapRenderer {
 		// Move and rotate support multi-select.
 		// Find the topmost selected, unlocked, non-hidden instance under the cursor.
 		let clickedInst: MapInstance | undefined;
+		let clickedLayerId: keyof MapLayers | undefined;
 		for (const lid of ['actors', 'tokens', 'objects', 'prefabs', 'tiles', 'backgrounds'] as const) {
 			const defaultLocked = lid === 'backgrounds' || lid === 'prefabs';
 			for (let i = this.layers[lid].length - 1; i >= 0; i--) {
@@ -391,6 +402,7 @@ export class MapRenderer {
 				if (inst.hidden || (inst.locked ?? defaultLocked)) continue;
 				if (!this.hitTestInstance(inst, worldX, worldY)) continue;
 				clickedInst = inst;
+				clickedLayerId = lid;
 				break;
 			}
 			if (clickedInst) break;
@@ -398,6 +410,7 @@ export class MapRenderer {
 		if (!clickedInst) return;
 
 		this.dragInst = clickedInst;
+		this.dragLayerId = clickedLayerId ?? null;
 
 		// Collect every selected, unlocked, non-hidden instance for the drag.
 		this.dragInstances = [];
@@ -459,11 +472,17 @@ export class MapRenderer {
 				const rect = this.canvas.getBoundingClientRect();
 				const worldX = (e.clientX - rect.left - this.panX) / this.zoom;
 				const worldY = (e.clientY - rect.top  - this.panY) / this.zoom;
-				const snappedX = Math.round((worldX - this.dragOffsetWorldX) / this.cellSize) * this.cellSize;
-				const snappedY = Math.round((worldY - this.dragOffsetWorldY) / this.cellSize) * this.cellSize;
-				if (snappedX !== this.dragInst.x || snappedY !== this.dragInst.y) {
-					const dx = snappedX - this.dragInst.x;
-					const dy = snappedY - this.dragInst.y;
+				// Objects can be freed from the grid by holding Shift; every other layer always snaps.
+				const freeMove = this.dragLayerId === 'objects' && e.shiftKey;
+				const targetX = freeMove
+					? worldX - this.dragOffsetWorldX
+					: Math.round((worldX - this.dragOffsetWorldX) / this.cellSize) * this.cellSize;
+				const targetY = freeMove
+					? worldY - this.dragOffsetWorldY
+					: Math.round((worldY - this.dragOffsetWorldY) / this.cellSize) * this.cellSize;
+				if (targetX !== this.dragInst.x || targetY !== this.dragInst.y) {
+					const dx = targetX - this.dragInst.x;
+					const dy = targetY - this.dragInst.y;
 					for (const inst of this.dragInstances) {
 						inst.x += dx;
 						inst.y += dy;
@@ -487,8 +506,22 @@ export class MapRenderer {
 				const rect = this.canvas.getBoundingClientRect();
 				const worldX = (e.clientX - rect.left - this.panX) / this.zoom;
 				const worldY = (e.clientY - rect.top  - this.panY) / this.zoom;
-				const newW = Math.max(this.cellSize, Math.round((worldX - this.dragInst.x) / this.cellSize) * this.cellSize);
-				const newH = Math.max(this.cellSize, Math.round((worldY - this.dragInst.y) / this.cellSize) * this.cellSize);
+				let newW: number;
+				let newH: number;
+				if (this.dragLayerId === 'objects' && e.shiftKey) {
+					// Free resize: scale both axes by the same factor (no grid alignment), preserving aspect ratio.
+					const origW = this.dragResizeOrigWidth;
+					const origH = this.dragResizeOrigHeight;
+					const dx = worldX - this.dragInst.x;
+					const dy = worldY - this.dragInst.y;
+					const rawScale = (dx * origW + dy * origH) / (origW * origW + origH * origH);
+					const scale = Math.max(MIN_FREE_RESIZE_SCALE, rawScale);
+					newW = origW * scale;
+					newH = origH * scale;
+				} else {
+					newW = Math.max(this.cellSize, Math.round((worldX - this.dragInst.x) / this.cellSize) * this.cellSize);
+					newH = Math.max(this.cellSize, Math.round((worldY - this.dragInst.y) / this.cellSize) * this.cellSize);
+				}
 				if (newW !== this.dragInst.width || newH !== this.dragInst.height) {
 					this.dragInst.width  = newW;
 					this.dragInst.height = newH;
@@ -549,6 +582,7 @@ export class MapRenderer {
 		}
 		this.dragInst = null;
 		this.dragInstances = [];
+		this.dragLayerId = null;
 		this.dragStartRotations.clear();
 		this.canvas.style.cursor = '';
 	}
