@@ -4,6 +4,16 @@ This project is a plugin for [Obsidian](https://obsidian.md). The purpose of the
 
 NOTE THAT THIS PROJECT IS IN **ACTIVE DEVELOPMENT**, SO FEATURES MAY BE MODIFIED OR CHANGED.
 
+## Screenshots
+
+![[screenshots/Screenshot_VTT_02.png]]
+
+> A VTT map using a pre-made background image created by [AfternoonMaps](https://www.deviantart.com/afternoonmaps/art/Woodland-Den-battle-map-20x20-Free-Version-764422915)
+
+![[screenshots/Screenshot_VTT_01.png]]
+
+> A VTT map created using tiles and objects by [Forgotten Adventures](https://www.forgotten-adventures.net/) 
+
 ## Why this plugin?
 
 First, I am a solo roleplayer who loves to use Obsidian VTT to manage game rules, record world lore, keep session notes, and store character details. Obsidian is a wonderful tool for connecting the different aspects of a game world.
@@ -32,10 +42,6 @@ So, I decided to create a plugin to fill that specific niche.
 	- Support for dice formulae
 	- Sane defaults, easily configured via Obsidian's Settings UI
 	- Map-configurable settings for flexibility
-
-## Screenshots
-
-INSERT SCREENSHOTS
 
 ## Support
 
