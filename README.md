@@ -40,5 +40,5 @@ INSERT SCREENSHOTS
 ## Support
 
 <span>
-<img height="16" alt="image" src="https://storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png?_gl=1*1bdvwgf*_gcl_au*NjQ1OTkyNjQ5LjE3ODA3NjYwNTk.*_ga*NDMzMjAwNTk4LjE3ODA3NjYwNTk.*_ga_M13FZ7VQ2C*czE3ODA3NjYwNTkkbzEkZzEkdDE3ODA3NjY4ODUkajYwJGwwJGgw" /> If you find this VTT plugin useful or fun, and you want to support me, you can <a href="https://ko-fi.com/denverandy">donate or buy me a coffee</a>, to keep me motivated!
+<img height="16" alt="image" src="https://storage.ko-fi.com/cdn/brandasset/v2/kofi_symbol.png?_gl=1*1bdvwgf*_gcl_au*NjQ1OTkyNjQ5LjE3ODA3NjYwNTk.*_ga*NDMzMjAwNTk4LjE3ODA3NjYwNTk.*_ga_M13FZ7VQ2C*czE3ODA3NjYwNTkkbzEkZzEkdDE3ODA3NjY4ODUkajYwJGwwJGgw" /> If you find this plugin useful or fun, and you want to support me, you can <a href="https://ko-fi.com/denverandy">send me a tip or buy me a coffee</a>, to keep me motivated!
 </span>
